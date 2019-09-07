@@ -2,9 +2,8 @@ package idmapper_test
 
 import (
 	"fmt"
-	"testing"
 
-	"github.com/danielkraic/idmapper"
+	"github.com/danielkraic/idmapper/idmapper"
 )
 
 type TestingSource struct{}
@@ -18,7 +17,17 @@ func (ts *TestingSource) Read() (idmapper.ValuesMap, error) {
 	}, nil
 }
 
-func Example(t *testing.T) {
+func SourceFunc() (idmapper.ValuesMap, error) {
+	return map[string]string{
+		"":    "space",
+		"a":   "A",
+		"b":   "B",
+		" c ": " C ",
+	}, nil
+}
+
+func Example() {
+	// idMapper, err := idmapper.NewIDMapper(idmapper.SourceReaderFunc(SourceFunc))
 	idMapper, err := idmapper.NewIDMapper(&TestingSource{})
 	if err != nil {
 		panic(err)

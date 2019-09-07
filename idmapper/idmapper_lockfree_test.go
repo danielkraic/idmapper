@@ -1,47 +1,35 @@
 package idmapper_test
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/danielkraic/idmapper"
+	"github.com/danielkraic/idmapper/idmapper"
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	errReadFailedString = "failed to read from source"
-	errReadFailed       = fmt.Errorf(errReadFailedString)
-)
-
-type TestingSourceValid struct {
-	values idmapper.ValuesMap
-}
-
-func (ts *TestingSourceValid) Read() (idmapper.ValuesMap, error) {
-	return ts.values, nil
-}
-
-type TestingSourceInvalid struct{}
-
-func (ts *TestingSourceInvalid) Read() (idmapper.ValuesMap, error) {
-	return nil, errReadFailed
-}
-
-func TestNewIdMapperValid(t *testing.T) {
-	validSource := &TestingSourceValid{
+func TestNewLockFreeValid(t *testing.T) {
+	source := &TestingSourceValid{
 		values: idmapper.ValuesMap{},
 	}
-	_, err := idmapper.NewIDMapper(validSource)
+
+	done := make(chan struct{})
+	_, err := idmapper.NewLockFree(source, done)
 	assert.Nil(t, err)
+
+	done <- struct{}{}
 }
 
-func TestNewIdMapperError(t *testing.T) {
-	validSource := &TestingSourceInvalid{}
-	_, err := idmapper.NewIDMapper(validSource)
+func TestNewLockFreeError(t *testing.T) {
+	source := &TestingSourceInvalid{}
+
+	done := make(chan struct{})
+	_, err := idmapper.NewLockFree(source, done)
 	assert.EqualError(t, err, errReadFailedString)
+
+	done <- struct{}{}
 }
 
-func TestIdMapperGetExisting(t *testing.T) {
+func TestLockFreeGetExisting(t *testing.T) {
 	values := idmapper.ValuesMap{
 		"":    "space",
 		"a":   "A",
@@ -49,11 +37,12 @@ func TestIdMapperGetExisting(t *testing.T) {
 		" c ": " C ",
 	}
 
-	validSource := &TestingSourceValid{
+	source := &TestingSourceValid{
 		values: values,
 	}
 
-	idMapper, err := idmapper.NewIDMapper(validSource)
+	done := make(chan struct{})
+	idMapper, err := idmapper.NewLockFree(source, done)
 	assert.Nil(t, err)
 
 	for k, v := range values {
@@ -61,14 +50,17 @@ func TestIdMapperGetExisting(t *testing.T) {
 		assert.Equal(t, found, true)
 		assert.Equal(t, result, v)
 	}
+
+	done <- struct{}{}
 }
 
-func TestIdMapperGetNotExist(t *testing.T) {
-	validSource := &TestingSourceValid{
+func TestLockFreeGetNotExist(t *testing.T) {
+	source := &TestingSourceValid{
 		values: idmapper.ValuesMap{},
 	}
 
-	idMapper, err := idmapper.NewIDMapper(validSource)
+	done := make(chan struct{})
+	idMapper, err := idmapper.NewLockFree(source, done)
 	assert.Nil(t, err)
 
 	nonExistingKeys := []string{"x", "y", "a ", " b"}
@@ -76,9 +68,11 @@ func TestIdMapperGetNotExist(t *testing.T) {
 		_, found := idMapper.Get(k)
 		assert.Equal(t, found, false)
 	}
+
+	done <- struct{}{}
 }
 
-func TestIdMapperReload(t *testing.T) {
+func TestLockFreeReload(t *testing.T) {
 	values := idmapper.ValuesMap{
 		"":    "space",
 		"a":   "A",
@@ -86,11 +80,12 @@ func TestIdMapperReload(t *testing.T) {
 		" c ": " C ",
 	}
 
-	validSource := &TestingSourceValid{
+	source := &TestingSourceValid{
 		values: values,
 	}
 
-	idMapper, err := idmapper.NewIDMapper(validSource)
+	done := make(chan struct{})
+	idMapper, err := idmapper.NewLockFree(source, done)
 	assert.Nil(t, err)
 
 	for k, v := range values {
@@ -107,4 +102,8 @@ func TestIdMapperReload(t *testing.T) {
 		assert.Equal(t, found, true)
 		assert.Equal(t, result, v)
 	}
+
+	assert.Equal(t, source.CallCount, 2)
+
+	done <- struct{}{}
 }

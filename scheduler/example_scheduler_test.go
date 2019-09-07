@@ -7,24 +7,32 @@ import (
 	"github.com/danielkraic/idmapper/scheduler"
 )
 
+type FirstJob struct {
+}
+
+func (firstJob FirstJob) Run() {
+	fmt.Printf("FirstJob called\n")
+}
+
+func SecondJobFunc() {
+	fmt.Printf("SecondJob called\n")
+}
+
 func Example() {
-	job1 := &Job{}
-	job2 := &Job{}
-
 	scheduler := scheduler.Scheduler{}
-	scheduler.Add(job1, 600*time.Millisecond)
-	scheduler.Add(job2, 300*time.Millisecond)
+	//scheduler.Add(&FirstJob{}, 100*time.Millisecond)
+	err := scheduler.AddFunc(SecondJobFunc, 300*time.Millisecond)
+	if err != nil {
+		panic(err)
+	}
 
-	done := make(chan struct{})
-	go scheduler.Run(done)
+	go scheduler.Start()
 
 	time.Sleep(time.Second)
-	done <- struct{}{}
-
-	fmt.Printf("job1 calls: %d\n", job1.Calls())
-	fmt.Printf("job2 calls: %d\n", job2.Calls())
+	scheduler.Stop()
 
 	// Output:
-	// job1 calls: 1
-	// job2 calls: 3
+	// SecondJob called
+	// SecondJob called
+	// SecondJob called
 }

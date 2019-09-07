@@ -1,2 +1,3 @@
-# idmapper
-simple ID to name mapper with reloading for golang
+# simple webservice using idmapper
+
+simple web app with ID to Name mapper
