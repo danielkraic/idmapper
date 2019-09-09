@@ -1,5 +1,7 @@
 # idmapper
 
+[![GoDoc](https://godoc.org/github.com/danielkraic/idmapper/idmapper?status.svg)](https://godoc.org/github.com/danielkraic/idmapper/idmapper)
+
 IDMapper is in-memory cache for mapping IDs to Names. Can be used to cache lists of IDs and Names (eg country list, languages list).
 
 ## Documentation
