@@ -9,6 +9,10 @@ import (
 
 // NewRedisIDMapper creates IDMapper that reads data from redis
 func NewRedisIDMapper(client *redis.Client, hashName string) (*idmapper.IDMapper, error) {
+	if client == nil {
+		return nil, fmt.Errorf("failed to create Redis IDMapper: redis client is nil")
+	}
+
 	return idmapper.NewIDMapper(&redisSource{client: client, hashName: hashName})
 }
 

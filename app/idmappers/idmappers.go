@@ -15,11 +15,16 @@ import (
 // Config configuration of IDMappers
 type Config struct {
 	Reloader struct {
-		Intervals struct {
-			Currency time.Duration `mapstructure:"currency"`
-			Country  time.Duration `mapstructure:"country"`
-			Language time.Duration `mapstructure:"language"`
-		} `mapstructure:"intervals"`
+		Currency struct {
+			Interval      time.Duration `mapstructure:"interval"`
+			RedisHashName string        `mapstructure:"redis_hash_name"`
+		} `mapstructure:"currency"`
+		Country struct {
+			Interval time.Duration `mapstructure:"interval"`
+		} `mapstructure:"country"`
+		Language struct {
+			Interval time.Duration `mapstructure:"interval"`
+		} `mapstructure:"language"`
 	} `mapstructure:"reloader"`
 	Loader struct {
 		Timeout time.Duration `mapstructure:"timeout"`
@@ -44,19 +49,19 @@ type IDMappers struct {
 
 // NewIDMappers creates IDMappers with available IDMapper objects
 func NewIDMappers(log *logrus.Logger, client *redis.Client, db *sql.DB, config *Config) (*IDMappers, error) {
-	currencyCodes, err := NewRedisIDMapper(client, "currency-codes")
+	currencyCodes, err := NewRedisIDMapper(client, config.Reloader.Currency.RedisHashName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create IDMapper for currency codes: %s", err)
 	}
 
 	countryCodes, err := NewPgSQLIDMapper(log, db, "select id, name from country")
 	if err != nil {
-		return nil, fmt.Errorf("failed to create IDMapper for currency codes: %s", err)
+		return nil, fmt.Errorf("failed to create IDMapper for country codes: %s", err)
 	}
 
 	languageCodes, err := NewHTTPIDMapper(log, config.Loader.URLs.Language, config.Loader.Timeout)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create IDMapper for currency codes: %s", err)
+		return nil, fmt.Errorf("failed to create IDMapper for language codes: %s", err)
 	}
 
 	return &IDMappers{
@@ -70,29 +75,31 @@ func NewIDMappers(log *logrus.Logger, client *redis.Client, db *sql.DB, config *
 
 // RunReloader starts scheduler for automatic reloading of IDMapper objects
 func (idMappers *IDMappers) RunReloader(log *logrus.Logger) {
-	logError := func(err error) {
+	logOperation := func(description string, err error) {
 		if err != nil {
-			log.Errorf("failed to reload IDMapper: %s", err)
+			log.Errorf("%s failed: %s", description, err)
+		} else {
+			log.Infof("%s was successful", description)
 		}
 	}
 
-	logError(idMappers.reloader.AddFunc(func() {
+	logOperation("setup of CurrencyCodes reloading", idMappers.reloader.AddFunc(func() {
 		idMappers.mtx.Lock()
 		defer idMappers.mtx.Unlock()
-		logError(idMappers.CurrencyCodes.Reload())
-	}, idMappers.config.Reloader.Intervals.Currency))
+		logOperation("reload of CurrencyCodes", idMappers.CurrencyCodes.Reload())
+	}, idMappers.config.Reloader.Currency.Interval))
 
-	logError(idMappers.reloader.AddFunc(func() {
+	logOperation("setup of CountryCodes reloading", idMappers.reloader.AddFunc(func() {
 		idMappers.mtx.Lock()
 		defer idMappers.mtx.Unlock()
-		logError(idMappers.CountryCodes.Reload())
-	}, idMappers.config.Reloader.Intervals.Country))
+		logOperation("reload of CountryCodes", idMappers.CountryCodes.Reload())
+	}, idMappers.config.Reloader.Country.Interval))
 
-	logError(idMappers.reloader.AddFunc(func() {
+	logOperation("setup of LanguageCodes reloading", idMappers.reloader.AddFunc(func() {
 		idMappers.mtx.Lock()
 		defer idMappers.mtx.Unlock()
-		logError(idMappers.LanguageCodes.Reload())
-	}, idMappers.config.Reloader.Intervals.Language))
+		logOperation("reload of LanguageCodes", idMappers.LanguageCodes.Reload())
+	}, idMappers.config.Reloader.Language.Interval))
 
 	go idMappers.reloader.Start()
 }

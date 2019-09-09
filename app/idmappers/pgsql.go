@@ -10,6 +10,9 @@ import (
 
 // NewPgSQLIDMapper creates IDMapper that reads data from sql database
 func NewPgSQLIDMapper(log *logrus.Logger, db *sql.DB, query string) (*idmapper.IDMapper, error) {
+	if db == nil {
+		return nil, fmt.Errorf("failed to create PgSQL IDMapper: sql.DB is nil")
+	}
 	return idmapper.NewIDMapper(&pgSQLSource{
 		log:   log,
 		query: query,

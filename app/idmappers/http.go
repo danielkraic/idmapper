@@ -14,8 +14,9 @@ import (
 // NewHTTPIDMapper creates IDMapper that reads data from http
 func NewHTTPIDMapper(log *logrus.Logger, url string, timeout time.Duration) (*idmapper.IDMapper, error) {
 	if url == "" {
-		return nil, fmt.Errorf("Empty url set for HTTP IDMapper")
+		return nil, fmt.Errorf("failed to create HTTP IDMapper: empty url")
 	}
+
 	return idmapper.NewIDMapper(&httpSource{
 		url: url,
 		log: log,

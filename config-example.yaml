@@ -15,7 +15,7 @@ redis:
   password: ""
 
 # pgsql configuration
-pgsql:
+postgresql:
   # connection string to database
   connection_string: "postgres://user1:pass1@localhost/db1?sslmode=disable"
 
@@ -23,11 +23,16 @@ pgsql:
 idmappers:
   # reloader configuration
   reloader:
-    # reload intervals for reloader
-    intervals:
-      currency: "24h"
-      country: "24h"
-      language: "24h"
+    currency:
+      # reload interval for reloader
+      interval: "24h"
+      redis_hash_name: "currency-codes" 
+    country:
+      # reload interval for reloader
+      interval: "24h"
+    language:
+      # reload interval for reloader
+      interval: "24h"
   # loader configuration 
   loader:
     # http client timeout

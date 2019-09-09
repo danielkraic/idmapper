@@ -9,7 +9,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func createRouter(apiPrefix string, appVersion *handlers.Version, idMappers *idmappers.IDMappers) *mux.Router {
+// CreateRouter creates http router
+func CreateRouter(apiPrefix string, appVersion *handlers.Version, idMappers *idmappers.IDMappers) *mux.Router {
 	r := mux.NewRouter()
 
 	versioned := func(route string) string {

@@ -16,7 +16,7 @@ type Configuration struct {
 	APIPrefix  string           `mapstructure:"api_prefix"`
 	Logger     LoggerConfig     `mapstructure:"logger"`
 	Redis      RedisConfig      `mapstructure:"redis"`
-	PostgreSQL PostgreSQLConfig `mapstructure:"pgsql"`
+	PostgreSQL PostgreSQLConfig `mapstructure:"postgresql"`
 	IDMappers  idmappers.Config `mapstructure:"idmappers"`
 }
 
@@ -28,7 +28,7 @@ type LoggerConfig struct {
 // RedisConfig application configuration for Redis
 type RedisConfig struct {
 	Addr     string `mapstructure:"addr"`
-	Password string `mapstructure:"pasword"`
+	Password string `mapstructure:"password"`
 }
 
 // PostgreSQLConfig application configuration for PostgreSQL
@@ -53,9 +53,13 @@ func readConfiguration(configFile string) (*Configuration, error) {
 	viper.SetDefault("api_prefix", "/v1")
 	viper.SetDefault("logger.json", false)
 	viper.SetDefault("redis.addr", "localhost:6379")
-	viper.SetDefault("idmappers.reloader.intervals.currency", "24h")
-	viper.SetDefault("idmappers.reloader.intervals.country", "24h")
-	viper.SetDefault("idmappers.reloader.intervals.language", "24h")
+	viper.SetDefault("redis.password", "")
+	viper.SetDefault("postgresql.connection_string", "postgresql://localhost")
+	viper.SetDefault("idmappers.reloader.currency.interval", "24h")
+	viper.SetDefault("idmappers.reloader.currency.redis_hash_name", "currency-codes")
+	viper.SetDefault("idmappers.reloader.country.interval", "24h")
+	viper.SetDefault("idmappers.reloader.language.interval", "24h")
+	viper.SetDefault("idmappers.loader.timeout", "5s")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
