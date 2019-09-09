@@ -1,5 +1,7 @@
 # scheduler
 
+[![GoDoc](https://godoc.org/github.com/danielkraic/idmapper/scheduler?status.svg)](https://godoc.org/github.com/danielkraic/idmapper/scheduler)
+
 package to run periodical jobs in background
 
 ## Documentation

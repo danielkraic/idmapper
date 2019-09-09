@@ -1,8 +1,10 @@
 # idmapper
 
+[![Build Status](https://travis-ci.com/danielkraic/idmapper.svg?branch=master)](https://travis-ci.com/danielkraic/idmapper)[![GoDoc](https://godoc.org/github.com/danielkraic/idmapper?status.svg)](https://godoc.org/github.com/danielkraic/idmapper)
+
 simple web app using IDMappers
 
-## IDMappers
+## IDMapper
 
 IDMapper is in-memory cache for mapping IDs to Names. Can be used to cache lists of IDs and Names (eg country list, languages list). More about IDMappers [here](https://github.com/danielkraic/idmapper/tree/master/idmapper) 
 
@@ -75,7 +77,7 @@ https://godoc.org/github.com/danielkraic/idmapper
 
 ### Configuration
 
-There are two ways of providing configuration: Using config file and using environmental variables. Both ways can be combined.
+There are two ways of providing configuration: using config file and using environmental variables. Both ways can be combined.
 
 #### Using config file
 
