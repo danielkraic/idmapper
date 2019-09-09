@@ -1,0 +1,44 @@
+version: '3.1'
+
+services:
+
+  # app:
+  #   build: .
+  #   restart: unless-stopped
+  #   command: ["/app/idmapperappa", "--print-config", "-c", "/app/config.yaml"]
+  #   ports:
+  #     - 8082:8082
+  #   depends_on: 
+  #     - redis
+  #     - postgres
+  #   environment:
+  #     IDMAPPER_ADDR: 0.0.0.0:8082
+  #     IDMAPPER_REDIS_ADDR: redis:6379
+  #     IDMAPPER_POSTGRESQL_CONNECTION_STRING: "postgres://user1:pass1@postgres/db1?sslmode=disable"
+  #   networks:
+  #     - backend
+
+  redis:
+    image: redis
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    networks:
+      - backend
+
+  postgres:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user1
+      POSTGRES_PASSWORD: pass1
+      POSTGRES_DB: db1
+    ports:
+      - 5432:5432
+    networks:
+      - backend
+    volumes:
+      - ./sql/country.sql:/docker-entrypoint-initdb.d/init.sql
+
+networks:
+  backend:

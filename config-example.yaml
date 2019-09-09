@@ -1,0 +1,44 @@
+# server http address
+addr: 0.0.0.0:8081
+# api route prefix
+api_prefix: "/v1"
+
+# logger configuration
+logger:
+  json: False
+
+# redis configuration
+redis:
+  # network address of redis server
+  addr: localhost:6379
+  # optional password
+  password: ""
+
+# pgsql configuration
+postgresql:
+  # connection string to database
+  connection_string: "postgres://user1:pass1@localhost/db1?sslmode=disable"
+
+# idmappers related configuration
+idmappers:
+  # reloader configuration
+  reloader:
+    currency:
+      # reload interval for reloader
+      interval: "24h"
+      redis_hash_name: "currency-codes" 
+    country:
+      # reload interval for reloader
+      interval: "24h"
+    language:
+      # reload interval for reloader
+      interval: "24h"
+  # loader configuration 
+  loader:
+    # http client timeout
+    timeout: "5s"
+    # urls for json source data
+    urls:
+      currency: https://datahub.io/core/currency-codes/r/codes-all.json
+      country: https://datahub.io/core/country-codes/r/country-codes.json
+      language: https://datahub.io/core/language-codes/r/language-codes-3b2.json

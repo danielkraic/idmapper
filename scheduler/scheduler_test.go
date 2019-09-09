@@ -25,15 +25,68 @@ func TestJob(t *testing.T) {
 	job := &Job{}
 
 	scheduler := scheduler.Scheduler{}
-	scheduler.Add(job, time.Second)
+	err := scheduler.Add(job, time.Second)
+	assert.Nil(t, err)
 
-	done := make(chan struct{})
-	go scheduler.Run(done)
+	go scheduler.Start()
 
 	time.Sleep(2500 * time.Millisecond)
-	done <- struct{}{}
+	scheduler.Stop()
 
 	assert.Equal(t, 2, job.Calls())
+}
+
+func TestJobFunc(t *testing.T) {
+	var counter int32 = 0
+	fn := func() {
+		atomic.AddInt32(&counter, 1)
+	}
+
+	scheduler := scheduler.Scheduler{}
+	err := scheduler.AddFunc(fn, 100*time.Millisecond)
+	assert.Nil(t, err)
+
+	go scheduler.Start()
+
+	time.Sleep(350 * time.Millisecond)
+	scheduler.Stop()
+
+	assert.Equal(t, int32(3), atomic.LoadInt32(&counter))
+}
+
+func TestAlreadyRunning(t *testing.T) {
+	var counter1 int32 = 0
+	var counter2 int32 = 0
+	fn1 := func() {
+		atomic.AddInt32(&counter1, 1)
+	}
+	fn2 := func() {
+		atomic.AddInt32(&counter2, 1)
+	}
+
+	scheduler := scheduler.Scheduler{}
+	err := scheduler.AddFunc(fn1, 100*time.Millisecond)
+	assert.Nil(t, err)
+
+	// start scheduler multiple times, only one instance of each job should be launched
+	go scheduler.Start()
+	go scheduler.Start()
+	go scheduler.Start()
+
+	time.Sleep(100 * time.Millisecond)
+
+	err = scheduler.AddFunc(fn2, 100*time.Millisecond)
+	assert.EqualError(t, err, "unable to add item to scheduler: scheduler is already running")
+
+	time.Sleep(250 * time.Millisecond)
+
+	// stop scheduler multiple times, only first Stop() will stop jobs
+	scheduler.Stop()
+	scheduler.Stop()
+	scheduler.Stop()
+
+	assert.Equal(t, int32(3), atomic.LoadInt32(&counter1))
+	assert.Equal(t, int32(0), atomic.LoadInt32(&counter2))
 }
 
 func TestMultipleJobs(t *testing.T) {
@@ -54,14 +107,14 @@ func TestMultipleJobs(t *testing.T) {
 
 	scheduler := scheduler.Scheduler{}
 	for _, job := range jobs {
-		scheduler.Add(job.job, job.duration)
+		err := scheduler.Add(job.job, job.duration)
+		assert.Nil(t, err)
 	}
 
-	done := make(chan struct{})
-	go scheduler.Run(done)
+	go scheduler.Start()
 
 	time.Sleep(totalDuration)
-	done <- struct{}{}
+	scheduler.Stop()
 
 	for _, job := range jobs {
 		assert.Equal(t, job.expectedCalls, job.job.Calls())
